@@ -68,6 +68,10 @@ def test_register_pair_recovers_known_overlap():
                    [np.sin(theta), np.cos(theta), 0],
                    [0, 0, 1]])
     perturbed = back_scan @ Rz.T + np.array([1.5, -1.0, 0.5])
+    # トレイ上の非原点位置に配置（重心まわり反転の検証＝大域反転だと破綻する）
+    tray_pos = np.array([45.0, -30.0, 8.0])
+    front = front + tray_pos
+    perturbed = perturbed + tray_pos
     f = Fragment("f", "front", front)
     b = Fragment("b", "back", perturbed)
     merged, info = register_pair(f, b, max_corr_dist=5.0, max_iter=80,

@@ -1,0 +1,30 @@
+input:
+  front: input/tray_front.ply
+  back: input/tray_back.ply
+output_dir: output
+work_dir: work
+target_unit_mm: 1.0
+
+preprocess:
+  plane_dist_threshold: 1.0
+  denoise_neighbors: 20
+  denoise_std_ratio: 2.0
+
+segment:
+  cluster_eps: 5.0
+  cluster_min_points: 50
+
+descriptors:
+  thickness_bins: 16
+
+match:
+  position_prune_radius: 30.0
+  cost_threshold: 0.25
+
+registration:
+  icp_max_corr_dist: 5.0
+  icp_max_iter: 80
+  boundary_quantile: 0.2
+
+output:
+  mesh_for_measurement: false

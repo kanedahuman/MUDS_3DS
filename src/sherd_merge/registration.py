@@ -40,8 +40,15 @@ def register_pair(front: Fragment, back: Fragment,
     """表裏 1 組を統合する。境界（縁）点で ICP を行い、変換後にマージする。
 
     返り値：(統合点群 (N,3), {'rmse':..., 'fitness':..., 'transform':4x4})
+
+    粗合わせは「裏破片を自身の重心まわりで反転し、表破片の重心へ移す」。
+    トレイ上での絶対位置に依存せず（各破片は (px,py) と様々な位置を取る）、
+    反転後に表裏の重心が共在するため、続く境界 ICP が狭重複でも収束する。
     """
-    back_init = initial_pose_from_mirror(back.points)
+    c_front = front.points.mean(axis=0)
+    c_back = back.points.mean(axis=0)
+    # 裏破片を自身の重心へ寄せて反転し、表破片の重心へ整列（粗合わせ）。
+    back_init = initial_pose_from_mirror(back.points - c_back) + c_front
 
     fb = extract_boundary(front.points, boundary_quantile)
     bb = extract_boundary(back_init, boundary_quantile)
