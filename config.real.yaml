@@ -1,0 +1,33 @@
+input:
+  front: "C:/Users/user/OneDrive - 三重大学/MUDS-3DCtest/test5/Aside.ply"
+  back:  "C:/Users/user/OneDrive - 三重大学/MUDS-3DCtest/test5/Bside.ply"
+output_dir: output_real
+work_dir: work_real
+target_unit_mm: 1.0
+
+preprocess:
+  plane_dist_threshold: 1.0
+  denoise_neighbors: 20
+  denoise_std_ratio: 2.0
+  voxel_size: 0.4
+
+segment:
+  cluster_eps: 2.0
+  cluster_min_points: 300
+
+descriptors:
+  thickness_bins: 16
+
+match:
+  # トレイ全体を裏返したため表裏の破片は共在しない。位置枝刈りを実質無効化し
+  # 輪郭ベースの形状照合に委ねる。
+  position_prune_radius: 500.0
+  cost_threshold: 0.30
+
+registration:
+  icp_max_corr_dist: 3.0
+  icp_max_iter: 120
+  boundary_quantile: 0.3
+
+output:
+  mesh_for_measurement: false

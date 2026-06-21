@@ -8,3 +8,6 @@ input/
 *.obj
 !tests/**/*.ply
 *.egg-info/
+scratch_*
+*.npy
+*.png
