@@ -58,3 +58,41 @@ def test_match_front_back_fallback_without_position():
     assert len(pairs) == 1
     assert pairs[0].front_id == "front_0"
     assert pairs[0].back_id == "back_0"
+
+
+def test_contour_distance_invariant_to_rotation_and_reflection():
+    from sherd_merge.matching import contour_distance
+    import numpy as np
+    bins = np.linspace(0, 2*np.pi, 72, endpoint=False)
+    sig = 10 + 3*np.cos(2*bins)
+    sig_rot = np.roll(sig, 17)
+    sig_ref = sig[::-1]
+    assert contour_distance(sig, sig_rot) < 0.5
+    assert contour_distance(sig, sig_ref) < 0.5
+
+
+def test_contour_distance_large_for_different_size():
+    from sherd_merge.matching import contour_distance
+    import numpy as np
+    bins = np.linspace(0, 2*np.pi, 72, endpoint=False)
+    small = 10 + 0*bins
+    big = 20 + 0*bins
+    assert contour_distance(small, big) > 5.0
+
+
+def test_pair_cost_robust_to_coverage_difference():
+    import numpy as np
+    from sherd_merge.types import Fragment
+    from sherd_merge.descriptors import compute_descriptor
+    from sherd_merge.matching import pair_cost, mirror_lr
+    from tests.conftest import make_shell
+    front, back = make_shell(radius=18.0, thickness=6.0, n=600, seed=5)
+    rng = np.random.default_rng(1)
+    keep = rng.random(len(back)) < 0.4
+    back_sparse = back[keep]
+    df = compute_descriptor(Fragment("f", "front", front))
+    db = compute_descriptor(Fragment("b", "back", mirror_lr(back_sparse)))
+    same = pair_cost(df, db)
+    other, _ = make_shell(radius=30.0, thickness=6.0, n=600, seed=6)
+    do = compute_descriptor(Fragment("o", "front", other))
+    assert same < pair_cost(df, do)

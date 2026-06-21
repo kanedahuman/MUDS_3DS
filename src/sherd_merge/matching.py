@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 from .types import Fragment, Descriptor, MatchPair
-from .descriptors import compute_descriptor
+from .descriptors import compute_descriptor, contour_signature
 
 
 def mirror_lr(points: np.ndarray) -> np.ndarray:
@@ -11,16 +11,32 @@ def mirror_lr(points: np.ndarray) -> np.ndarray:
     return out
 
 
+def contour_distance(sig_a: np.ndarray, sig_b: np.ndarray) -> float:
+    """2 つの極半径シグネチャの距離。角度シフト（回転）と反射を許した
+    最小の平均絶対差を返す。真スケールなのでサイズ差はそのまま距離に出る。"""
+    n = len(sig_a)
+    best = float("inf")
+    for cand in (sig_b, sig_b[::-1]):          # 反射あり/なし
+        for s in range(n):                      # 角度シフト（回転）
+            d = float(np.abs(sig_a - np.roll(cand, s)).mean())
+            if d < best:
+                best = d
+    return best
+
+
 def _hist_distance(a: np.ndarray, b: np.ndarray) -> float:
     return float(np.abs(a - b).sum() / 2.0)  # L1/2（正規化ヒスト同士で 0..1）
 
 
 def pair_cost(df: Descriptor, db: Descriptor) -> float:
-    """形状コスト：面積差・厚み分布差・アスペクト差の重み付き和（小さいほど類似）。"""
-    area_term = abs(df.area - db.area) / max(df.area, db.area, 1e-9)
+    """形状コスト：真スケール輪郭距離（主）＋厚み分布差（従）。小さいほど類似。"""
+    sa = contour_signature(df.contour_xy)
+    sb = contour_signature(db.contour_xy)
+    cdist = contour_distance(sa, sb)
+    scale = max(sa.mean(), sb.mean(), 1e-9)     # 代表半径で無次元化
+    contour_term = cdist / scale
     thick_term = _hist_distance(df.thickness_hist, db.thickness_hist)
-    aspect_term = abs(df.aspect - db.aspect) / max(df.aspect, db.aspect, 1e-9)
-    return 0.5 * area_term + 0.3 * thick_term + 0.2 * aspect_term
+    return 0.8 * contour_term + 0.2 * thick_term
 
 
 def match_front_back(fronts: list[Fragment], backs: list[Fragment],
