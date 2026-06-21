@@ -44,3 +44,37 @@ def test_run_pipeline_end_to_end(tmp_path):
     frag_dir = os.path.join(str(tmp_path / "out"), "fragments")
     plys = [f for f in os.listdir(frag_dir) if f.endswith(".ply")]
     assert len(plys) == 2
+
+
+def test_pipeline_runs_with_voxel_downsample(tmp_path):
+    import os, numpy as np, open3d as o3d
+    from sherd_merge.config import Config
+    from sherd_merge.pipeline import run_pipeline
+    from tests.conftest import make_shell
+
+    def write_tray(path, parts):
+        rng = np.random.default_rng(0)
+        plane = np.column_stack([rng.uniform(-90, 90, 1500),
+                                 rng.uniform(-90, 90, 1500),
+                                 rng.normal(0, 0.2, 1500)])
+        allp = np.vstack(parts + [plane])
+        pcd = o3d.geometry.PointCloud(); pcd.points = o3d.utility.Vector3dVector(allp)
+        o3d.io.write_point_cloud(path, pcd)
+
+    fronts, backs = [], []
+    for i, (px, r) in enumerate([(-40, 14), (40, 24)]):
+        f, b = make_shell(radius=r, thickness=6.0, n=500, seed=30 + i)
+        f = f.copy(); f[:, 2] += 6.0; f[:, 0] += px
+        bb = b.copy(); bb[:, 0] *= -1; bb[:, 2] += 6.0; bb[:, 0] += px
+        fronts.append(f); backs.append(bb)
+    fp = str(tmp_path / "front.ply"); bp = str(tmp_path / "back.ply")
+    write_tray(fp, fronts); write_tray(bp, backs)
+    cfg = Config(input_front=fp, input_back=bp,
+                 output_dir=str(tmp_path / "out"), work_dir=str(tmp_path / "work"),
+                 voxel_size=0.5, cluster_eps=5.0, cluster_min_points=50,
+                 position_prune_radius=30.0, mesh_for_measurement=False)
+    report = run_pipeline(cfg)
+    assert os.path.exists(report)
+    plys = [f for f in os.listdir(os.path.join(str(tmp_path / "out"), "fragments"))
+            if f.endswith(".ply")]
+    assert len(plys) == 2

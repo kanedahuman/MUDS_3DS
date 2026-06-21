@@ -2,7 +2,7 @@ import os
 import click
 from .config import load_config, Config
 from .io_adapter import load_points
-from .preprocess import remove_tray_plane, denoise
+from .preprocess import remove_tray_plane, denoise, voxel_downsample
 from .segment import segment_fragments
 from .matching import match_front_back
 from .descriptors import compute_descriptor
@@ -22,11 +22,15 @@ def run_pipeline(cfg: Config) -> str:
     front_pts = load_points(cfg.input_front, cfg.target_unit_mm)
     back_pts = load_points(cfg.input_back, cfg.target_unit_mm)
 
-    # M1 トレイ除去＋デノイズ
-    front_pts = denoise(remove_tray_plane(front_pts, cfg.plane_dist_threshold),
-                        cfg.denoise_neighbors, cfg.denoise_std_ratio)
-    back_pts = denoise(remove_tray_plane(back_pts, cfg.plane_dist_threshold),
-                       cfg.denoise_neighbors, cfg.denoise_std_ratio)
+    # M1 トレイ除去＋デノイズ＋ダウンサンプル
+    def _prep(pts):
+        pts = remove_tray_plane(pts, cfg.plane_dist_threshold)
+        pts = denoise(pts, cfg.denoise_neighbors, cfg.denoise_std_ratio)
+        pts = voxel_downsample(pts, cfg.voxel_size)
+        return pts
+
+    front_pts = _prep(front_pts)
+    back_pts = _prep(back_pts)
 
     # M2 個別切り出し
     fronts = segment_fragments(front_pts, "front", cfg.cluster_eps, cfg.cluster_min_points)
