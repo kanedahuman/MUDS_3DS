@@ -21,3 +21,21 @@ def test_load_config_overrides_defaults(tmp_path):
     )
     cfg = load_config(str(cfg_file))
     assert cfg.cluster_eps == 5.0
+
+
+def test_config_has_voxel_size_default(tmp_path):
+    from sherd_merge.config import load_config
+    cfg_file = tmp_path / "c.yaml"
+    cfg_file.write_text("input:\n  front: a.ply\n  back: b.ply\n", encoding="utf-8")
+    cfg = load_config(str(cfg_file))
+    assert cfg.voxel_size == 0.0
+
+
+def test_config_voxel_size_override(tmp_path):
+    from sherd_merge.config import load_config
+    cfg_file = tmp_path / "c.yaml"
+    cfg_file.write_text(
+        "input:\n  front: a.ply\n  back: b.ply\n"
+        "preprocess:\n  voxel_size: 0.4\n", encoding="utf-8")
+    cfg = load_config(str(cfg_file))
+    assert cfg.voxel_size == 0.4

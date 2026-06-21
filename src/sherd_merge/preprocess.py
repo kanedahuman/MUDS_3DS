@@ -35,3 +35,12 @@ def estimate_normals(points: np.ndarray, radius: float = 3.0, max_nn: int = 30) 
         search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=radius, max_nn=max_nn)
     )
     return np.asarray(pcd.normals)
+
+
+def voxel_downsample(points: np.ndarray, voxel: float) -> np.ndarray:
+    """ボクセルダウンサンプル。voxel<=0 のときは恒等（入力をそのまま返す）。"""
+    if voxel is None or voxel <= 0:
+        return points
+    pcd = _to_pcd(points)
+    ds = pcd.voxel_down_sample(voxel)
+    return np.asarray(ds.points)

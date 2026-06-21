@@ -14,6 +14,7 @@ class Config:
     plane_dist_threshold: float = 1.0  # mm
     denoise_neighbors: int = 20
     denoise_std_ratio: float = 2.0
+    voxel_size: float = 0.0             # mm（0 でダウンサンプルなし）
     # M2
     cluster_eps: float = 3.0           # mm
     cluster_min_points: int = 50
@@ -48,6 +49,7 @@ def load_config(path: str) -> Config:
         plane_dist_threshold=pre.get("plane_dist_threshold", 1.0),
         denoise_neighbors=pre.get("denoise_neighbors", 20),
         denoise_std_ratio=pre.get("denoise_std_ratio", 2.0),
+        voxel_size=pre.get("voxel_size", 0.0),
         cluster_eps=seg.get("cluster_eps", 3.0),
         cluster_min_points=seg.get("cluster_min_points", 50),
         thickness_bins=raw.get("descriptors", {}).get("thickness_bins", 16),
