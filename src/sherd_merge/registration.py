@@ -15,9 +15,16 @@ def extract_boundary(points: np.ndarray, quantile: float = 0.1) -> np.ndarray:
 
 
 def initial_pose_from_mirror(back_points: np.ndarray) -> np.ndarray:
-    """裏面を表へ向かい合わせる初期姿勢（左右反転＝x 符号反転）を適用して返す。"""
+    """裏面を表へ向かい合わせる初期姿勢を適用して返す。
+
+    取得時の「同じ位置で左右反転」は物理的には y 軸まわりの 180 度回転
+    （Ry180：(x,y,z)→(-x,y,-z)）である。これは行列式 +1 の剛体変換であり、
+    x のみ反転する鏡映（行列式 -1）ではない点に注意。これを裏スキャンに
+    適用すると、内面が表の外面と向かい合い、縁壁（破断面）が重なる。
+    """
     out = back_points.copy()
     out[:, 0] *= -1
+    out[:, 2] *= -1
     return out
 
 
