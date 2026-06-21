@@ -28,10 +28,14 @@ def match_front_back(fronts: list[Fragment], backs: list[Fragment],
                      cost_threshold: float = 0.25) -> list[MatchPair]:
     """位置事前情報で候補を枝刈りし、形状コストでハンガリアン割当を行う。
 
-    裏側は内部で左右反転して位置・形状を比較する。
+    裏破片は生スキャン空間のまま渡す（左右反転は不要）。取得時に破片を
+    同じ位置で左右反転するため、裏は表と同じ XY に共在し（形状のみミラー像）。
+    - 位置枝刈り：生の重心同士を比較（共在しているので正しく近接する）。
+    - 形状コスト：面積・厚み分布・アスペクトはいずれ左右反転で不変なので、
+      反転せずにそのまま比較してよい。
+    3D 統合のための実際のミラーは M5（registration）が担う。
     """
     fd = [compute_descriptor(f) for f in fronts]
-    # 裏側は呼び出し元が mirror_lr 済みで渡す前提。位置・形状ともにそのまま使う。
     bd = [compute_descriptor(b) for b in backs]
     f_xy = np.array([f.centroid_xy for f in fronts])
     b_xy = np.array([b.centroid_xy for b in backs])
