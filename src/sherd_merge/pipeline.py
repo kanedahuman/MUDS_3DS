@@ -47,9 +47,12 @@ def run_pipeline(cfg: Config) -> str:
     for idx, pair in enumerate(pairs, start=1):
         f = front_by_id[pair.front_id]
         b = back_by_id[pair.back_id]
-        # M5 統合
+        # M5 統合（縁ベース）
         merged, info = register_pair(f, b, cfg.icp_max_corr_dist,
-                                     cfg.icp_max_iter, cfg.boundary_quantile)
+                                     cfg.icp_max_iter,
+                                     edge_k=cfg.edge_k,
+                                     edge_gap_deg=cfg.edge_gap_deg,
+                                     shell_min_sep=cfg.shell_min_sep)
         name = f"fragment_{idx:03d}"
         write_model(merged, cfg.output_dir, name)
         if cfg.mesh_for_measurement:
@@ -63,7 +66,8 @@ def run_pipeline(cfg: Config) -> str:
             "max_dim": round(desc.max_dim, 2),
             "match_cost": round(pair.cost, 4),
             "icp_rmse": round(info["rmse"], 4),
-            "needs_review": pair.needs_review or info["rmse"] > cfg.icp_max_corr_dist,
+            "shell_sep": round(info["shell_sep"], 4),
+            "needs_review": pair.needs_review or info["collapsed"],
         })
 
     return write_report(rows, cfg.output_dir)

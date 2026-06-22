@@ -23,10 +23,12 @@ class Config:
     # M4
     position_prune_radius: float = 20.0  # mm（左右反転後の重心移動許容半径）
     match_cost_threshold: float = 0.25   # これ超で要確認
-    # M5
+    # M5（縁ベース登録）
     icp_max_corr_dist: float = 2.0       # mm
     icp_max_iter: int = 50
-    boundary_quantile: float = 0.1       # 外周近傍とみなす割合
+    edge_k: int = 30                     # 縁検出の近傍数
+    edge_gap_deg: float = 90.0           # 縁判定の角度ギャップ閾値（度）
+    shell_min_sep: float = 0.8           # この未満の厚み分離は潰れ＝要確認
     # M6
     mesh_for_measurement: bool = True    # 計測用にポアソンメッシュも出すか
 
@@ -57,6 +59,8 @@ def load_config(path: str) -> Config:
         match_cost_threshold=mat.get("cost_threshold", 0.25),
         icp_max_corr_dist=reg.get("icp_max_corr_dist", 2.0),
         icp_max_iter=reg.get("icp_max_iter", 50),
-        boundary_quantile=reg.get("boundary_quantile", 0.1),
+        edge_k=reg.get("edge_k", 30),
+        edge_gap_deg=reg.get("edge_gap_deg", 90.0),
+        shell_min_sep=reg.get("shell_min_sep", 0.8),
         mesh_for_measurement=out.get("mesh_for_measurement", True),
     )

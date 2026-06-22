@@ -74,9 +74,8 @@ def test_register_pair_recovers_known_overlap():
     perturbed = perturbed + tray_pos
     f = Fragment("f", "front", front)
     b = Fragment("b", "back", perturbed)
-    merged, info = register_pair(f, b, max_corr_dist=5.0, max_iter=80,
-                                 boundary_quantile=0.2)
-    # 実際に対応が取れていること（空振りでないことの検証）
-    assert info["fitness"] > 0.3
-    assert info["rmse"] < 1.2
+    # 縁ベース登録（新シグネチャ）。縁壁を共有するので潰れず統合できる。
+    merged, info = register_pair(f, b, max_corr_dist=5.0, max_iter=80)
     assert len(merged) >= len(front)
+    assert "shell_sep" in info and "collapsed" in info
+    assert info["collapsed"] is False

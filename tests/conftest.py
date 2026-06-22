@@ -14,6 +14,37 @@ def make_shell(radius=20.0, thickness=6.0, n=400, seed=0, curvature=0.004):
     return front, back
 
 
+def make_edged_shell(radius=18.0, thickness=6.0, n=700, seed=0,
+                     curvature=0.004, jag=2.0):
+    """ギザギザの共有縁を持つ殻。返り値 (front, back_phys, edge)。
+
+    front      = 外面（z=+t/2）＋ 縁
+    back_phys  = 内面（z=-t/2）＋ 縁（原フレーム）
+    edge       = 両者が共有する3D波状リング（半径 R 付近、法線方向に jag だけ揺らぐ）
+    """
+    rng = np.random.default_rng(seed)
+    # 共有のギザギザ縁リング
+    m = max(80, n // 4)
+    ea = np.sort(rng.uniform(0, 2 * np.pi, m))
+    er = radius + rng.normal(0, 0.3, m)
+    ex = er * np.cos(ea)
+    ey = er * np.sin(ea)
+    ec = curvature * (ex ** 2 + ey ** 2)
+    ez = ec + rng.uniform(-jag, jag, m)
+    edge = np.column_stack([ex, ey, ez])
+    # 外面・内面（円板内部）
+    a = rng.uniform(0, 2 * np.pi, n)
+    r = radius * np.sqrt(rng.uniform(0, 1, n))
+    x = r * np.cos(a)
+    y = r * np.sin(a)
+    zc = curvature * (x ** 2 + y ** 2)
+    outer = np.column_stack([x, y, zc + thickness / 2.0])
+    inner = np.column_stack([x, y, zc - thickness / 2.0])
+    front = np.vstack([outer, edge])
+    back_phys = np.vstack([inner, edge])
+    return front, back_phys, edge
+
+
 def make_tray(n_frags=3, seed=0, plane_points=2000):
     """トレイ平面 + 複数の破片（表面のみ）を結合した点群と破片ラベルを返す。
     ラベル -1 はトレイ平面。"""

@@ -25,7 +25,7 @@ def write_mesh(mesh, out_dir: str, name: str) -> str:
 
 
 REPORT_FIELDS = ["frag_id", "back_id", "area", "max_dim",
-                 "match_cost", "icp_rmse", "needs_review"]
+                 "match_cost", "icp_rmse", "shell_sep", "needs_review"]
 
 
 def write_report(rows: list[dict], out_dir: str) -> str:
